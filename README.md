@@ -1,12 +1,14 @@
 # URL Shortener App
 
-A modern, full-stack MERN URL shortener web application designed to generate, manage, and track shortened links. Built with **React 18**, **TypeScript**, **Tailwind CSS**, **Node.js**, **Express**, and **MongoDB**.
+A modern, full-stack MERN URL shortener web application designed to generate, manage, and track shortened links. Built with **React 18**, **TypeScript**, **Tailwind CSS**, **Node.js**, **Express**, and **MongoDB**, fully containerized with **Docker** and automated via **GitHub Actions CI**.
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![React](https://img.shields.io/badge/React-18.x-61dafb.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)
 ![Node.js](https://img.shields.io/badge/Node.js-20.x-green.svg)
-![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-3.x-38b2ac.svg)
+![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED.svg)
+![Nginx](https://img.shields.io/badge/Nginx-Reverse--Proxy-009639.svg)
+![CI Pipeline](https://github.com/thejaynesh/Url-Shortner-App/actions/workflows/ci.yml/badge.svg)
 
 ---
 
@@ -20,6 +22,7 @@ A modern, full-stack MERN URL shortener web application designed to generate, ma
 - **Live Search & Filter:** Quickly find links by destination domain or unique short code.
 - **One-Click Copy:** Seamless clipboard copying with instant visual feedback.
 - **Safe Management:** Delete outdated or unwanted shortened links.
+- **Containerized Architecture:** Instant zero-config setup using multi-stage Docker builds and Docker Compose.
 
 ---
 
@@ -30,37 +33,61 @@ A modern, full-stack MERN URL shortener web application designed to generate, ma
 - **Styling:** Tailwind CSS with PostCSS
 - **Build Tool:** Vite
 - **HTTP Client:** Axios
-- **Routing:** React Router DOM
+- **Production Server:** Nginx (Alpine)
 
 ### Backend
-- **Runtime:** Node.js
+- **Runtime:** Node.js (Alpine)
 - **Framework:** Express.js with TypeScript
 - **Database:** MongoDB with Mongoose ODM
 - **ID Generation:** Nanoid
-- **Dev Server:** ts-node-dev
+
+### DevOps & Infrastructure
+- **Containerization:** Docker multi-stage builds (Server & Client)
+- **Orchestration:** Docker Compose (Mongo, API, Nginx Client, Networks, Volumes)
+- **CI/CD:** GitHub Actions automated build and configuration validation
 
 ---
 
 ## Getting Started
 
-### Prerequisites
+### Option A: Run with Docker Compose (Recommended)
+
+The entire full-stack application (MongoDB, Express API, and React frontend with Nginx) can be spun up with a single command:
+
+```bash
+# Clone the repository
+git clone https://github.com/thejaynesh/Url-Shortner-App.git
+cd Url-Shortner-App
+
+# Start all containers in detached mode
+docker compose up -d --build
+```
+
+- **Frontend Application:** `http://localhost:3000`
+- **Backend API:** `http://localhost:5001`
+- **MongoDB Database:** `localhost:27017`
+
+To shut down the containers:
+```bash
+docker compose down
+```
+
+---
+
+### Option B: Local Manual Setup
+
+#### Prerequisites
 - [Node.js](https://nodejs.org/) (v18 or higher)
 - [MongoDB](https://www.mongodb.com/) (running locally or a MongoDB Atlas URI)
 
-### Installation
+#### Installation
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/thejaynesh/Url-Shortner-App.git
-   cd Url-Shortner-App
-   ```
-
-2. **Install all dependencies (root, backend, and frontend):**
+1. **Install all dependencies:**
    ```bash
    npm run install:all
    ```
 
-3. **Configure Environment Variables:**
+2. **Configure Environment Variables:**
    - In `server-app/.env`:
      ```env
      PORT=5001
@@ -71,23 +98,27 @@ A modern, full-stack MERN URL shortener web application designed to generate, ma
      VITE_SERVER_URL=http://localhost:5001/api
      ```
 
-4. **Start Development Servers:**
-   To run both backend and frontend concurrently with a single command:
+3. **Start Development Servers:**
+   Run both backend and frontend concurrently:
    ```bash
    npm run dev
    ```
-   - Client will start at: `http://localhost:3000` (or `http://localhost:5173`)
-   - Backend API will start at: `http://localhost:5001`
 
 ---
 
 ## Project Structure
 
 ```
+├── .github/
+│   └── workflows/
+│       └── ci.yml             # GitHub Actions CI automated pipeline
+├── docker-compose.yml         # Multi-service container orchestration
 ├── package.json               # Root scripts (concurrent execution)
 ├── .gitignore
 ├── README.md
-├── server-app/                # Backend API
+├── server-app/                # Backend API (Node.js & Express)
+│   ├── Dockerfile             # Multi-stage production build
+│   ├── .dockerignore
 │   ├── src/
 │   │   ├── config/dbConfig.ts # MongoDB connection setup
 │   │   ├── controllers/       # Business logic (create, redirect, list, delete)
@@ -96,7 +127,10 @@ A modern, full-stack MERN URL shortener web application designed to generate, ma
 │   │   └── server.ts          # Express server entry point & root redirect
 │   ├── package.json
 │   └── tsconfig.json
-└── client-app/                # React Frontend
+└── client-app/                # React Frontend (Vite & Tailwind)
+    ├── Dockerfile             # Multi-stage build with Nginx server
+    ├── nginx.conf             # Reverse proxy configuration
+    ├── .dockerignore
     ├── src/
     │   ├── components/
     │   │   ├── Container/     # Main page layout & state management
