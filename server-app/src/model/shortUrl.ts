@@ -11,10 +11,19 @@ const shortUrlSchema = new mongoose.Schema({
         required: true,
         default: () => nanoid().substring(0,10),
     },
-    clicks:{
+    clicks: {
         type: Number,
         default: 0,
-    }
+    },
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+    },
+    creatorToken: {
+        type: String,
+        default: null,
+    },
 },{
     timestamps: true,
 });

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { UrlData } from '../../interface/UrlData';
 import { serverUrl } from '../../helpers/Constants';
-import axios from 'axios';
+import { api } from '../../helpers/api';
 import QRCodeModal from '../QRCodeModal/QRCodeModal';
 
 interface IDataTableProps {
@@ -10,7 +10,7 @@ interface IDataTableProps {
   onRefresh: () => void;
 }
 
-const DataTable: React.FunctionComponent<IDataTableProps> = ({
+const DataTable: React.FC<IDataTableProps> = ({
   data,
   isLoading,
   onRefresh,
@@ -38,21 +38,31 @@ const DataTable: React.FunctionComponent<IDataTableProps> = ({
   };
 
   const deleteUrl = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this shortened URL?')) {
+    if (!window.confirm('Are you sure you want to delete this shortened link?')) {
       return;
     }
 
     try {
       setDeletingId(id);
-      await axios.delete(`${serverUrl}/shortUrl/${id}`);
+      await api.delete(`/shortUrl/${id}`);
       onRefresh();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting URL:', error);
-      alert('Failed to delete the URL. Please try again.');
+      const msg = error.response?.data?.message || 'Failed to delete the URL. Please try again.';
+      alert(msg);
     } finally {
       setDeletingId(null);
     }
   };
+
+  const totalClicks = React.useMemo(() => {
+    return data.reduce((acc, curr) => acc + (curr.clicks || 0), 0);
+  }, [data]);
+
+  const avgClicks = React.useMemo(() => {
+    if (data.length === 0) return 0;
+    return (totalClicks / data.length).toFixed(1);
+  }, [data, totalClicks]);
 
   const filteredData = React.useMemo(() => {
     if (!searchQuery.trim()) return data;
@@ -66,10 +76,10 @@ const DataTable: React.FunctionComponent<IDataTableProps> = ({
 
   if (isLoading) {
     return (
-      <div className="w-full bg-white rounded-xl shadow-sm p-8 text-center border border-gray-200">
-        <div className="flex justify-center items-center gap-3 text-gray-500">
+      <div className="w-full bg-slate-900/60 rounded-2xl p-12 text-center border border-slate-800">
+        <div className="flex justify-center items-center gap-3 text-slate-400">
           <svg
-            className="animate-spin h-6 w-6 text-blue-600"
+            className="animate-spin h-6 w-6 text-cyan-400"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -88,259 +98,260 @@ const DataTable: React.FunctionComponent<IDataTableProps> = ({
               d="M4 12a8 8 0 018-8v8H4z"
             />
           </svg>
-          <span className="text-base font-medium">Loading shortened URLs...</span>
+          <span className="text-sm font-medium">Fetching your private links & analytics...</span>
         </div>
-      </div>
-    );
-  }
-
-  if (data.length === 0) {
-    return (
-      <div className="w-full bg-white rounded-xl shadow-sm p-12 text-center border border-gray-200">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 text-blue-600 mb-4">
-          <svg
-            className="w-8 h-8"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-            />
-          </svg>
-        </div>
-        <h3 className="text-xl font-bold text-gray-800">No shortened URLs yet</h3>
-        <p className="text-gray-500 text-sm mt-1 max-w-sm mx-auto">
-          Paste your first link in the form above to generate a short URL and start tracking clicks!
-        </p>
       </div>
     );
   }
 
   return (
-    <div className="w-full space-y-4">
-      {/* Search Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-        <div>
-          <h3 className="text-lg font-bold text-gray-800">All Shortened Links</h3>
-          <p className="text-xs text-gray-500">
-            Total {data.length} {data.length === 1 ? 'link' : 'links'} tracked
-          </p>
+    <div className="w-full space-y-6 mt-8">
+      {/* Analytics Highlights Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Card 1 */}
+        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Your Active Links</span>
+            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101" />
+              </svg>
+            </div>
+          </div>
+          <div className="text-3xl font-extrabold text-white mt-3">{data.length}</div>
+          <div className="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+            Private to your profile
+          </div>
         </div>
 
-        <div className="relative w-full sm:w-72">
-          <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none text-gray-400">
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
+        {/* Card 2 */}
+        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Clicks Tracked</span>
+            <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </div>
+          </div>
+          <div className="text-3xl font-extrabold text-white mt-3">{totalClicks}</div>
+          <div className="text-[11px] text-emerald-400 mt-1 flex items-center gap-1">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+            </svg>
+            Live real-time counters
+          </div>
+        </div>
+
+        {/* Card 3 */}
+        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Tracking Privacy</span>
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+          </div>
+          <div className="text-3xl font-extrabold text-emerald-400 mt-3">100%</div>
+          <div className="text-[11px] text-slate-400 mt-1">
+            Protected against public snooping
+          </div>
+        </div>
+      </div>
+
+      {data.length === 0 ? (
+        <div className="w-full bg-slate-900/70 border border-slate-800 rounded-2xl p-12 text-center shadow-lg">
+          <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </div>
-          <input
-            type="text"
-            placeholder="Search links..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full text-xs ps-9 pe-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-          />
+          <h3 className="text-xl font-bold text-white mb-2">No Private Links Yet</h3>
+          <p className="text-slate-400 text-sm max-w-md mx-auto mb-4">
+            Paste a link above to generate your first short URL. Its click analytics and visit tracking will appear only here.
+          </p>
         </div>
-      </div>
+      ) : (
+        <>
+          {/* Controls Bar: Search & Link Counter */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900/90 p-4 rounded-2xl border border-slate-800 shadow-md">
+            <div>
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <span>Your Private Short Links</span>
+                <span className="px-2 py-0.5 rounded-full text-xs font-mono bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                  {data.length}
+                </span>
+              </h3>
+              <p className="text-xs text-slate-400">
+                Only visible to you. External users can only execute redirects.
+              </p>
+            </div>
 
-      {/* Table */}
-      <div className="w-full bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-gray-600">
-            <thead className="bg-slate-800 text-white uppercase text-xs tracking-wider">
-              <tr>
-                <th scope="col" className="px-6 py-4 w-5/12 font-semibold">
-                  Destination URL
-                </th>
-                <th scope="col" className="px-6 py-4 w-3/12 font-semibold">
-                  Short URL
-                </th>
-                <th scope="col" className="px-6 py-4 w-2/12 font-semibold text-center">
-                  Clicks
-                </th>
-                <th scope="col" className="px-6 py-4 w-2/12 font-semibold text-right">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredData.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-6 py-8 text-center text-gray-400 text-sm">
-                    No links match your search "{searchQuery}"
-                  </td>
-                </tr>
-              ) : (
-                filteredData.map((item) => {
-                  const fullShortUrl = getDirectShortUrl(item.shortUrl);
-                  const isCopied = copiedId === item._id;
-                  const isDeleting = deletingId === item._id;
+            <div className="relative w-full sm:w-72">
+              <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none text-slate-500">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                placeholder="Search by destination or code..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full text-xs ps-9 pe-8 py-2.5 bg-slate-950 border border-slate-700/80 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute inset-y-0 end-0 pe-2.5 flex items-center text-slate-400 hover:text-white text-xs"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
 
-                  return (
-                    <tr
-                      key={item._id}
-                      className="hover:bg-slate-50 transition-colors"
-                    >
-                      <td className="px-6 py-4 break-all">
-                        <a
-                          href={item.fullUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
-                          title={item.fullUrl}
-                        >
-                          {item.fullUrl}
-                        </a>
-                      </td>
-
-                      <td className="px-6 py-4">
-                        <a
-                          href={fullShortUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 font-mono text-xs px-2.5 py-1 bg-blue-50 text-blue-700 rounded-md border border-blue-200 hover:bg-blue-100 transition-colors"
-                        >
-                          {item.shortUrl}
-                          <svg
-                            className="w-3 h-3 opacity-60"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                            />
-                          </svg>
-                        </a>
-                      </td>
-
-                      <td className="px-6 py-4 text-center">
-                        <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-700">
-                          {item.clicks}
-                        </span>
-                      </td>
-
-                      <td className="px-6 py-4 text-right">
-                        <div className="inline-flex items-center gap-1.5 justify-end">
-                          {/* QR Code Action */}
-                          <button
-                            onClick={() =>
-                              setSelectedQR({
-                                shortUrl: fullShortUrl,
-                                fullUrl: item.fullUrl,
-                              })
-                            }
-                            className="p-2 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all"
-                            title="Show QR Code"
-                          >
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
-                              />
-                            </svg>
-                          </button>
-
-                          {/* Copy Action */}
-                          <button
-                            onClick={() => copyToClipboard(item.shortUrl, item._id)}
-                            className={`p-2 rounded-lg text-xs font-medium transition-all flex items-center gap-1 ${
-                              isCopied
-                                ? 'bg-emerald-100 text-emerald-700 font-semibold'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            }`}
-                            title="Copy short link"
-                          >
-                            {isCopied ? (
-                              <>
-                                <svg
-                                  className="w-4 h-4 text-emerald-600"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                    d="M5 13l4 4L19 7"
-                                  />
-                                </svg>
-                                <span>Copied!</span>
-                              </>
-                            ) : (
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                                />
-                              </svg>
-                            )}
-                          </button>
-
-                          {/* Delete Action */}
-                          <button
-                            onClick={() => deleteUrl(item._id)}
-                            disabled={isDeleting}
-                            className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 transition-colors disabled:opacity-50"
-                            title="Delete URL"
-                          >
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                              />
-                            </svg>
-                          </button>
-                        </div>
+          {/* Links Table */}
+          <div className="w-full bg-slate-900/90 rounded-2xl shadow-xl overflow-hidden border border-slate-800">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm text-slate-300">
+                <thead className="bg-slate-950/80 text-slate-400 uppercase text-[11px] tracking-wider border-b border-slate-800">
+                  <tr>
+                    <th scope="col" className="px-6 py-4 w-5/12 font-semibold">
+                      Destination Address
+                    </th>
+                    <th scope="col" className="px-6 py-4 w-3/12 font-semibold">
+                      Short Link
+                    </th>
+                    <th scope="col" className="px-6 py-4 w-2/12 font-semibold text-center">
+                      Visits (Clicks)
+                    </th>
+                    <th scope="col" className="px-6 py-4 w-2/12 font-semibold text-right">
+                      Controls
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/80">
+                  {filteredData.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-10 text-center text-slate-500 text-sm">
+                        No shortened links matched "{searchQuery}"
                       </td>
                     </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                  ) : (
+                    filteredData.map((item) => {
+                      const fullShortUrl = getDirectShortUrl(item.shortUrl);
+                      const isCopied = copiedId === item._id;
+                      const isDeleting = deletingId === item._id;
+
+                      return (
+                        <tr key={item._id} className="hover:bg-slate-800/40 transition-colors">
+                          <td className="px-6 py-4">
+                            <div className="max-w-md break-all">
+                              <a
+                                href={item.fullUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-indigo-300 hover:text-cyan-300 font-medium transition-colors hover:underline text-xs sm:text-sm line-clamp-2"
+                                title={item.fullUrl}
+                              >
+                                {item.fullUrl}
+                              </a>
+                              <div className="text-[11px] text-slate-500 mt-1">
+                                Created {new Date(item.createdAt).toLocaleDateString()}
+                              </div>
+                            </div>
+                          </td>
+
+                          <td className="px-6 py-4">
+                            <a
+                              href={fullShortUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 font-mono text-xs px-3 py-1.5 bg-slate-950 text-cyan-300 rounded-lg border border-slate-700/80 hover:border-cyan-400/80 hover:bg-slate-900 transition-all shadow-sm"
+                            >
+                              <span>{item.shortUrl}</span>
+                              <svg className="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              </svg>
+                            </a>
+                          </td>
+
+                          <td className="px-6 py-4 text-center">
+                            <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold rounded-full bg-cyan-950/60 text-cyan-300 border border-cyan-800/50 shadow-sm">
+                              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                              {item.clicks} {item.clicks === 1 ? 'click' : 'clicks'}
+                            </span>
+                          </td>
+
+                          <td className="px-6 py-4 text-right">
+                            <div className="inline-flex items-center gap-1.5 justify-end">
+                              {/* QR Code Button */}
+                              <button
+                                onClick={() =>
+                                  setSelectedQR({
+                                    shortUrl: fullShortUrl,
+                                    fullUrl: item.fullUrl,
+                                  })
+                                }
+                                className="p-2 rounded-xl text-xs font-medium bg-slate-800 text-slate-300 hover:text-cyan-300 hover:bg-slate-700 border border-slate-700 transition-all"
+                                title="View QR Code"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                                </svg>
+                              </button>
+
+                              {/* Copy Link Button */}
+                              <button
+                                onClick={() => copyToClipboard(item.shortUrl, item._id)}
+                                className={`p-2 rounded-xl text-xs font-medium transition-all flex items-center gap-1 border ${
+                                  isCopied
+                                    ? 'bg-emerald-950/80 text-emerald-300 border-emerald-600 font-bold'
+                                    : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border-slate-700'
+                                }`}
+                                title="Copy Short Link"
+                              >
+                                {isCopied ? (
+                                  <>
+                                    <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    <span className="hidden sm:inline">Copied</span>
+                                  </>
+                                ) : (
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                  </svg>
+                                )}
+                              </button>
+
+                              {/* Delete Link Button */}
+                              <button
+                                onClick={() => deleteUrl(item._id)}
+                                disabled={isDeleting}
+                                className="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-rose-400 hover:bg-rose-950/40 border border-slate-700 hover:border-rose-900 transition-colors disabled:opacity-40"
+                                title="Delete this link"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* QR Code Modal */}
       {selectedQR && (

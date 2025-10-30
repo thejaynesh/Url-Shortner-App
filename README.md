@@ -1,28 +1,29 @@
-# URL Shortener App
+# LinkPulse — Smart URL Shortener & Private Analytics
 
-A modern, full-stack MERN URL shortener web application designed to generate, manage, and track shortened links. Built with **React 18**, **TypeScript**, **Tailwind CSS**, **Node.js**, **Express**, and **MongoDB**, fully containerized with **Docker** and automated via **GitHub Actions CI**.
+A modern, full-stack MERN URL shortener and link management platform with **owner-gated tracking privacy**. Built with **React 18**, **TypeScript**, **Tailwind CSS**, **Node.js**, **Express**, and **MongoDB**, fully containerized with **Docker** and automated via **GitHub Actions CI**.
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![React](https://img.shields.io/badge/React-18.x-61dafb.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)
 ![Node.js](https://img.shields.io/badge/Node.js-20.x-green.svg)
+![Security: Private Tracking](https://img.shields.io/badge/Security-Owner--Only%20Analytics-indigo.svg)
 ![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED.svg)
-![Nginx](https://img.shields.io/badge/Nginx-Reverse--Proxy-009639.svg)
-![CI Pipeline](https://github.com/thejaynesh/Url-Shortner-App/actions/workflows/ci.yml/badge.svg)
 
 ---
 
 ## Features
 
+- **Owner-Gated Tracking Privacy:** Click analytics and link metrics are strictly isolated to the user who created the short URL. Zero cross-user visibility.
+- **User Authentication & Guest Migration:** Secure JWT authentication with Bcrypt password encryption. Anonymous links created on a device seamlessly migrate to a user's account upon sign up.
 - **Instant URL Shortening:** Convert long, complex web addresses into clean, shareable short links.
 - **Smart Protocol Normalization:** Automatically handles URLs with or without `http://` / `https://`.
-- **Direct Redirection:** Short links route cleanly through fast redirects with visit tracking.
-- **Click Analytics:** Real-time counters monitor how many times each shortened link has been clicked.
+- **Direct Redirection:** Public short links route cleanly through fast redirects (`HTTP 302`) with visit tracking.
+- **Click Analytics & Dashboard:** Real-time counters monitor clicks with overview statistics (Active Links, Total Clicks, Privacy Guard).
 - **Interactive QR Codes:** Generate and download crisp QR codes for any link to easily share across mobile devices.
 - **Live Search & Filter:** Quickly find links by destination domain or unique short code.
+- **Modern Dark UI:** Premium deep-slate and electric indigo/cyan neon theme with glassmorphic accents.
 - **One-Click Copy:** Seamless clipboard copying with instant visual feedback.
-- **Safe Management:** Delete outdated or unwanted shortened links.
-- **Containerized Architecture:** Instant zero-config setup using multi-stage Docker builds and Docker Compose.
+- **Safe Management:** Delete outdated or unwanted shortened links with owner authorization checks.
 
 ---
 
