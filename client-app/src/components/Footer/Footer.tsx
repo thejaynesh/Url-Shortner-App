@@ -11,7 +11,7 @@ const Footer: React.FC = () => {
             </svg>
           </div>
           <span className="font-bold text-white text-sm">
-            Link<span className="text-cyan-400">Pulse</span>
+            Link<span className="text-cyan-400">Flow</span>
           </span>
           <span className="text-slate-500">|</span>
           <span className="text-slate-400">Owner-Gated Analytics Engine</span>
@@ -26,7 +26,7 @@ const Footer: React.FC = () => {
             Built with React, TypeScript & MongoDB
           </div>
           <div>
-            © {new Date().getFullYear()} LinkPulse
+            © {new Date().getFullYear()} LinkFlow
           </div>
         </div>
       </div>

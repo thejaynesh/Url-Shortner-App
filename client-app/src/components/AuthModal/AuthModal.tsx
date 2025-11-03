@@ -69,7 +69,7 @@ const AuthModal: React.FC = () => {
           </div>
           <div>
             <h3 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-              Link<span className="text-cyan-400">Pulse</span>
+              Link<span className="text-cyan-400">Flow</span>
             </h3>
             <p className="text-xs text-slate-400">Private Link Security & Analytics</p>
           </div>
@@ -179,7 +179,7 @@ const AuthModal: React.FC = () => {
                 Processing...
               </span>
             ) : authMode === "login" ? (
-              "Sign In to LinkPulse"
+              "Sign In to LinkFlow"
             ) : (
               "Create My Free Account"
             )}

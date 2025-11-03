@@ -32,7 +32,7 @@ const Header: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-black tracking-tight text-white font-sans">
-                  Link<span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400">Pulse</span>
+                  Link<span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400">Flow</span>
                 </span>
                 <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide uppercase bg-indigo-500/10 text-cyan-400 border border-indigo-500/30">
                   v2.0 Secure

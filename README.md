@@ -1,4 +1,4 @@
-# LinkPulse — Smart URL Shortener & Private Analytics
+# LinkFlow — Smart URL Shortener & Private Analytics
 
 A modern, full-stack MERN URL shortener and link management platform with **owner-gated tracking privacy**. Built with **React 18**, **TypeScript**, **Tailwind CSS**, **Node.js**, **Express**, and **MongoDB**, fully containerized with **Docker** and automated via **GitHub Actions CI**.
 

@@ -2,28 +2,29 @@ import axios from "axios";
 import { serverUrl } from "./Constants";
 
 export const getClientToken = (): string => {
-  let token = localStorage.getItem("linkpulse_client_token");
+  let token = localStorage.getItem("linkflow_client_token") || localStorage.getItem("linkpulse_client_token");
   if (!token) {
     token = `guest_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
-    localStorage.setItem("linkpulse_client_token", token);
+    localStorage.setItem("linkflow_client_token", token);
   }
   return token;
 };
 
 export const getAuthToken = (): string | null => {
-  return localStorage.getItem("linkpulse_auth_token");
+  return localStorage.getItem("linkflow_auth_token") || localStorage.getItem("linkpulse_auth_token");
 };
 
 export const setAuthToken = (token: string | null) => {
   if (token) {
-    localStorage.setItem("linkpulse_auth_token", token);
+    localStorage.setItem("linkflow_auth_token", token);
   } else {
+    localStorage.removeItem("linkflow_auth_token");
     localStorage.removeItem("linkpulse_auth_token");
   }
 };
 
 export const getStoredUser = () => {
-  const userJson = localStorage.getItem("linkpulse_user");
+  const userJson = localStorage.getItem("linkflow_user") || localStorage.getItem("linkpulse_user");
   if (!userJson) return null;
   try {
     return JSON.parse(userJson);
@@ -34,8 +35,9 @@ export const getStoredUser = () => {
 
 export const setStoredUser = (user: any) => {
   if (user) {
-    localStorage.setItem("linkpulse_user", JSON.stringify(user));
+    localStorage.setItem("linkflow_user", JSON.stringify(user));
   } else {
+    localStorage.removeItem("linkflow_user");
     localStorage.removeItem("linkpulse_user");
   }
 };

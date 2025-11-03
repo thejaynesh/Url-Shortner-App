@@ -75,7 +75,7 @@ const QRCodeModal: React.FC<IQRCodeModalProps> = ({
         <div className="flex gap-2">
           <a
             href={qrImageUrl}
-            download="linkpulse-qr.png"
+            download="linkflow-qr.png"
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 py-2.5 px-3 bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white text-xs font-semibold rounded-xl transition-all shadow-md text-center"

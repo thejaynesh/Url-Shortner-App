@@ -20,7 +20,7 @@ const Container: React.FC = () => {
       setData(response.data);
     } catch (error) {
       console.error('Error fetching URLs:', error);
-      setFetchError('Unable to connect to the LinkPulse backend server. Please verify it is running.');
+      setFetchError('Unable to connect to the LinkFlow backend server. Please verify it is running.');
     } finally {
       setIsLoading(false);
     }

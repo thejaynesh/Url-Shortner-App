@@ -12,7 +12,7 @@ export interface AuthRequest extends Request {
   clientToken?: string;
 }
 
-export const JWT_SECRET = process.env.JWT_SECRET || "linkpulse-secure-jwt-secret-2026";
+export const JWT_SECRET = process.env.JWT_SECRET || "linkflow-secure-jwt-secret-2026";
 
 // Middleware that extracts user info if a token is present, and always extracts clientToken
 export const authOptional = (
