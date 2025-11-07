@@ -24,29 +24,27 @@ export const createUrl = async (req: AuthRequest, res: Response) => {
     try {
       new URL(normalizedUrl);
     } catch {
-      return res.status(400).json({ message: "Invalid URL provided" });
+      return res.status(400).json({ message: "Invalid URL provided. Please include a valid web address." });
     }
 
     const userId = req.user?.id || null;
     const clientToken = req.clientToken || null;
 
-    if (!userId && !clientToken) {
-      return res.status(400).json({
-        message: "Identity header (user authentication or client token) is required to secure your link tracking.",
-      });
+    // If authenticated user already shortened this link, reuse their existing link
+    if (userId) {
+      const existingUserLink = await urlModel.findOne({ fullUrl: normalizedUrl, userId });
+      if (existingUserLink) {
+        return res.status(200).json(existingUserLink);
+      }
+    } else if (clientToken) {
+      // If guest with client token already shortened it, reuse
+      const existingGuestLink = await urlModel.findOne({ fullUrl: normalizedUrl, creatorToken: clientToken, userId: null });
+      if (existingGuestLink) {
+        return res.status(200).json(existingGuestLink);
+      }
     }
 
-    // Check if THIS user/creator already created a link for this destination
-    const existingQuery = userId
-      ? { fullUrl: normalizedUrl, userId }
-      : { fullUrl: normalizedUrl, creatorToken: clientToken, userId: null };
-
-    const urlFound = await urlModel.findOne(existingQuery);
-    if (urlFound) {
-      return res.status(200).json(urlFound);
-    }
-
-    // Create new secure short URL record tied to the owner
+    // Create new short URL (works without login, attaches to user if logged in)
     const newShortUrl = await urlModel.create({
       fullUrl: normalizedUrl,
       userId: userId,
@@ -60,21 +58,17 @@ export const createUrl = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// ONLY returns URLs shortened by the requesting user or guest device
+// Returns tracking list: ONLY for authenticated users
 export const getAllUrl = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id || null;
-    const clientToken = req.clientToken || null;
 
-    if (!userId && !clientToken) {
+    // Tracking is strictly an account feature
+    if (!userId) {
       return res.status(200).json([]);
     }
 
-    const query = userId
-      ? { userId }
-      : { creatorToken: clientToken, userId: null };
-
-    const shortUrls = await urlModel.find(query).sort({ createdAt: -1 });
+    const shortUrls = await urlModel.find({ userId }).sort({ createdAt: -1 });
     return res.status(200).json(shortUrls);
   } catch (error) {
     console.error("Error fetching URLs:", error);
@@ -99,21 +93,22 @@ export const getUrl = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// Private tracking endpoint: Only the creator can inspect analytics for a link
+// Private tracking endpoint: Only the logged-in owner can inspect detailed analytics
 export const getUrlStats = async (req: AuthRequest, res: Response) => {
   try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({
+        message: "You must be logged in to inspect tracking analytics for this link.",
+      });
+    }
+
     const shortUrl = await urlModel.findOne({ shortUrl: req.params.id });
     if (!shortUrl) {
       return res.status(404).json({ message: "Short URL not found" });
     }
 
-    const userId = req.user?.id;
-    const clientToken = req.clientToken;
-
-    const isOwner =
-      (userId && shortUrl.userId && shortUrl.userId.toString() === userId) ||
-      (!shortUrl.userId && clientToken && shortUrl.creatorToken === clientToken);
-
+    const isOwner = shortUrl.userId && shortUrl.userId.toString() === userId;
     if (!isOwner) {
       return res.status(403).json({
         message: "Forbidden: Tracking data is strictly private to the creator of this link.",
@@ -134,21 +129,20 @@ export const getUrlStats = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// Delete endpoint: Enforces creator ownership
+// Delete endpoint: Enforces authenticated owner permission
 export const deleteUrl = async (req: AuthRequest, res: Response) => {
   try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: "Authentication required to delete links." });
+    }
+
     const shortUrl = await urlModel.findById(req.params.id);
     if (!shortUrl) {
       return res.status(404).json({ message: "URL not found" });
     }
 
-    const userId = req.user?.id;
-    const clientToken = req.clientToken;
-
-    const isOwner =
-      (userId && shortUrl.userId && shortUrl.userId.toString() === userId) ||
-      (!shortUrl.userId && clientToken && shortUrl.creatorToken === clientToken);
-
+    const isOwner = shortUrl.userId && shortUrl.userId.toString() === userId;
     if (!isOwner) {
       return res.status(403).json({
         message: "Forbidden: You do not have permission to delete this URL.",

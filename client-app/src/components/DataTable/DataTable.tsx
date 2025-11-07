@@ -2,6 +2,7 @@ import * as React from 'react';
 import { UrlData } from '../../interface/UrlData';
 import { serverUrl } from '../../helpers/Constants';
 import { api } from '../../helpers/api';
+import { useAuth } from '../../context/AuthContext';
 import QRCodeModal from '../QRCodeModal/QRCodeModal';
 
 interface IDataTableProps {
@@ -19,6 +20,8 @@ const DataTable: React.FC<IDataTableProps> = ({
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
   const [deletingId, setDeletingId] = React.useState<string | null>(null);
   const [selectedQR, setSelectedQR] = React.useState<{ shortUrl: string; fullUrl: string } | null>(null);
+
+  const { isAuthenticated, openAuthModal } = useAuth();
 
   const getDirectShortUrl = (shortCode: string) => {
     return `${serverUrl.replace(/\/api\/?$/, '')}/${shortCode}`;
@@ -59,11 +62,6 @@ const DataTable: React.FC<IDataTableProps> = ({
     return data.reduce((acc, curr) => acc + (curr.clicks || 0), 0);
   }, [data]);
 
-  const avgClicks = React.useMemo(() => {
-    if (data.length === 0) return 0;
-    return (totalClicks / data.length).toFixed(1);
-  }, [data, totalClicks]);
-
   const filteredData = React.useMemo(() => {
     if (!searchQuery.trim()) return data;
     const q = searchQuery.toLowerCase();
@@ -74,9 +72,68 @@ const DataTable: React.FC<IDataTableProps> = ({
     );
   }, [data, searchQuery]);
 
+  // If the user is NOT authenticated, display the clear "Tracking Requires Account" card
+  if (!isAuthenticated) {
+    return (
+      <div className="w-full mt-8 bg-slate-900/80 border border-slate-800 rounded-3xl p-8 sm:p-12 text-center shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="max-w-xl mx-auto relative z-10">
+          <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-cyan-400 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-500/10">
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+
+          <span className="inline-block px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 mb-3">
+            Account Feature
+          </span>
+
+          <h3 className="text-2xl sm:text-3xl font-extrabold text-white mb-3">
+            Real-Time Click Tracking
+          </h3>
+
+          <p className="text-slate-300 text-sm leading-relaxed mb-6">
+            You can generate unlimited short links without logging in. To monitor visit counters, view click statistics, and manage your links, sign in or create a free account.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8 text-left">
+            <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 text-xs">
+              <div className="text-cyan-400 font-bold mb-0.5">⚡ Live Click Counts</div>
+              <div className="text-slate-400 text-[11px]">Real-time visitor logs on every click.</div>
+            </div>
+            <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 text-xs">
+              <div className="text-indigo-400 font-bold mb-0.5">🔒 Private to You</div>
+              <div className="text-slate-400 text-[11px]">Nobody else can inspect your tracking.</div>
+            </div>
+            <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 text-xs">
+              <div className="text-emerald-400 font-bold mb-0.5">📋 Link Dashboard</div>
+              <div className="text-slate-400 text-[11px]">Search, copy, QR, and delete links.</div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              onClick={() => openAuthModal('register')}
+              className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 shadow-lg shadow-indigo-600/30 transition-all"
+            >
+              Create Free Account to Track Links
+            </button>
+            <button
+              onClick={() => openAuthModal('login')}
+              className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-sm text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-colors"
+            >
+              Sign In
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
-      <div className="w-full bg-slate-900/60 rounded-2xl p-12 text-center border border-slate-800">
+      <div className="w-full bg-slate-900/60 rounded-2xl p-12 text-center border border-slate-800 mt-8">
         <div className="flex justify-center items-center gap-3 text-slate-400">
           <svg
             className="animate-spin h-6 w-6 text-cyan-400"
@@ -169,14 +226,14 @@ const DataTable: React.FC<IDataTableProps> = ({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </div>
-          <h3 className="text-xl font-bold text-white mb-2">No Private Links Yet</h3>
+          <h3 className="text-xl font-bold text-white mb-2">No Tracked Links Yet</h3>
           <p className="text-slate-400 text-sm max-w-md mx-auto mb-4">
-            Paste a link above to generate your first short URL. Its click analytics and visit tracking will appear only here.
+            Paste a link above to generate a short URL. Since you are signed in, its click visits will appear here live!
           </p>
         </div>
       ) : (
         <>
-          {/* Controls Bar: Search & Link Counter */}
+          {/* Controls Bar */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900/90 p-4 rounded-2xl border border-slate-800 shadow-md">
             <div>
               <h3 className="text-base font-bold text-white flex items-center gap-2">
