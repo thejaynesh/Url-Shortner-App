@@ -4,6 +4,7 @@ import { serverUrl } from '../../helpers/Constants';
 import { api } from '../../helpers/api';
 import { useAuth } from '../../context/AuthContext';
 import QRCodeModal from '../QRCodeModal/QRCodeModal';
+import AnalyticsModal from '../AnalyticsModal/AnalyticsModal';
 
 interface IDataTableProps {
   data: UrlData[];
@@ -20,6 +21,7 @@ const DataTable: React.FC<IDataTableProps> = ({
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
   const [deletingId, setDeletingId] = React.useState<string | null>(null);
   const [selectedQR, setSelectedQR] = React.useState<{ shortUrl: string; fullUrl: string } | null>(null);
+  const [selectedAnalyticsCode, setSelectedAnalyticsCode] = React.useState<string | null>(null);
 
   const { isAuthenticated, openAuthModal } = useAuth();
 
@@ -338,14 +340,33 @@ const DataTable: React.FC<IDataTableProps> = ({
                           </td>
 
                           <td className="px-6 py-4 text-center">
-                            <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold rounded-full bg-cyan-950/60 text-cyan-300 border border-cyan-800/50 shadow-sm">
-                              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
-                              {item.clicks} {item.clicks === 1 ? 'click' : 'clicks'}
-                            </span>
+                            <button
+                              onClick={() => setSelectedAnalyticsCode(item.shortUrl)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-cyan-950/60 text-cyan-300 border border-cyan-800/50 hover:bg-cyan-900/60 hover:border-cyan-400 transition-all shadow-sm group"
+                              title="Click to view detailed visitor analytics & telemetry"
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                              <span>{item.clicks} {item.clicks === 1 ? 'click' : 'clicks'}</span>
+                              <svg className="w-3 h-3 text-cyan-400 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                              </svg>
+                            </button>
                           </td>
 
                           <td className="px-6 py-4 text-right">
                             <div className="inline-flex items-center gap-1.5 justify-end">
+                              {/* Analytics Details Button */}
+                              <button
+                                onClick={() => setSelectedAnalyticsCode(item.shortUrl)}
+                                className="p-2 rounded-xl text-xs font-medium bg-indigo-950/50 text-cyan-300 hover:text-white hover:bg-indigo-900/60 border border-indigo-800/50 hover:border-cyan-400/60 transition-all flex items-center gap-1"
+                                title="Inspect detailed visitor analytics"
+                              >
+                                <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                                <span className="hidden sm:inline font-semibold">Stats</span>
+                              </button>
+
                               {/* QR Code Button */}
                               <button
                                 onClick={() =>
@@ -375,7 +396,7 @@ const DataTable: React.FC<IDataTableProps> = ({
                                 {isCopied ? (
                                   <>
                                     <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                                     </svg>
                                     <span className="hidden sm:inline">Copied</span>
                                   </>
@@ -417,6 +438,15 @@ const DataTable: React.FC<IDataTableProps> = ({
           onClose={() => setSelectedQR(null)}
           shortUrl={selectedQR.shortUrl}
           fullUrl={selectedQR.fullUrl}
+        />
+      )}
+
+      {/* Analytics Modal */}
+      {selectedAnalyticsCode && (
+        <AnalyticsModal
+          isOpen={!!selectedAnalyticsCode}
+          onClose={() => setSelectedAnalyticsCode(null)}
+          shortCode={selectedAnalyticsCode}
         />
       )}
     </div>

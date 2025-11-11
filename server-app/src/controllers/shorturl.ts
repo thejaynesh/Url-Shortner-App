@@ -1,6 +1,14 @@
 import { Response } from "express";
 import { urlModel } from "../model/shortUrl";
 import { AuthRequest } from "../middlewares/authMiddleware";
+import {
+  parseDevice,
+  parseOS,
+  parseBrowser,
+  parseReferrer,
+  parseCountry,
+  computeAnalytics,
+} from "../helpers/analyticsHelper";
 
 // Helper to normalize and validate URL
 const formatUrl = (url: string): string => {
@@ -76,7 +84,7 @@ export const getAllUrl = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// Public redirect endpoint: increments clicks and routes visitor to destination
+// Public redirect endpoint: logs rich visit analytics, increments clicks and routes visitor
 export const getUrl = async (req: AuthRequest, res: Response) => {
   try {
     const shortUrl = await urlModel.findOne({ shortUrl: req.params.id });
@@ -84,7 +92,36 @@ export const getUrl = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: "Short URL not found" });
     }
 
+    const ua = (req.headers["user-agent"] || "") as string;
+    const referrerHeader = (req.headers["referer"] || req.headers["referrer"] || "") as string;
+    const country = parseCountry(req.headers);
+
+    const device = parseDevice(ua);
+    const os = parseOS(ua);
+    const browser = parseBrowser(ua);
+    const referrer = parseReferrer(referrerHeader);
+
     shortUrl.clicks++;
+
+    // Record click log
+    if (!shortUrl.clickLogs) {
+      shortUrl.clickLogs = [] as any;
+    }
+
+    shortUrl.clickLogs.push({
+      timestamp: new Date(),
+      device,
+      os,
+      browser,
+      referrer,
+      country,
+    } as any);
+
+    // Keep the most recent 200 visit logs to prevent excessive document growth
+    if (shortUrl.clickLogs.length > 200) {
+      shortUrl.clickLogs.shift();
+    }
+
     await shortUrl.save();
     return res.redirect(shortUrl.fullUrl);
   } catch (error) {
@@ -93,7 +130,7 @@ export const getUrl = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// Private tracking endpoint: Only the logged-in owner can inspect detailed analytics
+// Private tracking endpoint: Computes and returns detailed analytics breakdown
 export const getUrlStats = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id;
@@ -115,6 +152,9 @@ export const getUrlStats = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    // Compute aggregated breakdown metrics
+    const analytics = computeAnalytics((shortUrl.clickLogs as any) || []);
+
     return res.status(200).json({
       _id: shortUrl._id,
       fullUrl: shortUrl.fullUrl,
@@ -122,6 +162,7 @@ export const getUrlStats = async (req: AuthRequest, res: Response) => {
       clicks: shortUrl.clicks,
       createdAt: (shortUrl as any).createdAt,
       updatedAt: (shortUrl as any).updatedAt,
+      analytics,
     });
   } catch (error) {
     console.error("Error fetching link stats:", error);
