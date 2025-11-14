@@ -1,21 +1,30 @@
 import * as React from 'react';
-import Header from './components/Header/Header';
+import Navbar from './components/Navbar/Navbar';
 import Footer from './components/Footer/Footer';
-import Container from './components/Container/Container';
+import LandingView from './components/Landing/LandingView';
+import DashboardView from './components/Dashboard/DashboardView';
 import AuthModal from './components/AuthModal/AuthModal';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+
+const AppContent: React.FC = () => {
+  const { isAuthenticated } = useAuth();
+
+  return (
+    <div className="flex flex-col min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-zinc-800 selection:text-white antialiased">
+      <Navbar />
+      <main className="flex-grow">
+        {isAuthenticated ? <DashboardView /> : <LandingView />}
+      </main>
+      <Footer />
+      <AuthModal />
+    </div>
+  );
+};
 
 const App: React.FC = () => {
   return (
     <AuthProvider>
-      <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-indigo-500 selection:text-white antialiased">
-        <Header />
-        <main className="flex-grow">
-          <Container />
-        </main>
-        <Footer />
-        <AuthModal />
-      </div>
+      <AppContent />
     </AuthProvider>
   );
 };
