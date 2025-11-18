@@ -69,11 +69,6 @@ const LandingView: React.FC = () => {
     <div className="w-full">
       {/* Hero Section */}
       <section className="relative pt-16 pb-20 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center">
-        {/* Subtle pill badge */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs font-medium mb-6">
-          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
-          <span>Fast, free redirects with optional private tracking</span>
-        </div>
 
         <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white mb-6 leading-tight">
           Short links built for speed,{' '}
