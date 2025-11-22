@@ -9,6 +9,8 @@ A modern, full-stack MERN URL shortener and link management platform with **owne
 ![Security: Private Tracking](https://img.shields.io/badge/Security-Owner--Only%20Analytics-indigo.svg)
 ![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED.svg)
 
+**Live Demo:** [https://url-shortner-app-liard.vercel.app](https://url-shortner-app-liard.vercel.app)
+
 ---
 
 ## Features
