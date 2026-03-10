@@ -1,0 +1,19 @@
+{
+  "name": "url-shortner-app",
+  "version": "1.0.0",
+  "description": "Full-stack MERN URL Shortener Application with TypeScript & Tailwind CSS",
+  "scripts": {
+    "install:all": "npm --prefix server-app install && npm --prefix client-app install",
+    "dev:server": "npm --prefix server-app run dev",
+    "dev:client": "npm --prefix client-app run dev",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "build:server": "npm --prefix server-app run build",
+    "build:client": "npm --prefix client-app run build",
+    "build": "npm run build:server && npm run build:client"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "author": "Jaynesh Bhandari (@thejaynesh)",
+  "license": "MIT"
+}
