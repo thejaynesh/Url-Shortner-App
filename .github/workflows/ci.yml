@@ -19,21 +19,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
-          cache-dependency-path: |
-            server-app/package.json
-            client-app/package.json
 
       - name: Build Server App (TypeScript)
         working-directory: ./server-app
         run: |
-          npm ci
+          npm install
           npm run build
 
       - name: Build Client App (React & Vite)
         working-directory: ./client-app
         run: |
-          npm ci
+          npm install
           npm run build
 
       - name: Validate Docker Compose Configuration
